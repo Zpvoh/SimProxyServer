@@ -99,7 +99,7 @@ void do_get(int sockfd, const char *uri) {
     send(sockfd, header, sizeof(header), 0);
     
     char line[128] = {0};
-    send(sockfd, "hello world", 100, 0);
+    send(sockfd, "hello world", 11, 0);
     // while (fgets(line, sizeof(line), f) != NULL) {
     //     send(sockfd, line, strlen(line), 0);
     //     memset(line, 0, sizeof(line));
