@@ -79,18 +79,18 @@ void do_get(int sockfd, const char *uri) {
     char filename[MAX_URI_LEN] = {0};
     const char *cur = uri + 1;
     size_t len = strlen(cur);
-    if (len == 0) {
-        strcpy(filename, "index.html");
-    } else {
-        url_decode(cur, filename);
-    }
-    printf("%s\n", filename);
+    // if (len == 0) {
+    //     strcpy(filename, "index.html");
+    // } else {
+    //     url_decode(cur, filename);
+    // }
+    // printf("%s\n", filename);
     
-    FILE *f = fopen(filename, "r");
-    if (NULL == f) {
-        not_found(sockfd);
-        return;
-    }
+    // FILE *f = fopen(filename, "r");
+    // if (NULL == f) {
+    //     not_found(sockfd);
+    //     return;
+    // }
 
     char header[] =
         "HTTP/1.0 200 OK\r\n"
@@ -99,13 +99,14 @@ void do_get(int sockfd, const char *uri) {
     send(sockfd, header, sizeof(header), 0);
     
     char line[128] = {0};
-    while (fgets(line, sizeof(line), f) != NULL) {
-        send(sockfd, line, strlen(line), 0);
-        memset(line, 0, sizeof(line));
-    }
+    send(sockfd, "hello world", 100, 0);
+    // while (fgets(line, sizeof(line), f) != NULL) {
+    //     send(sockfd, line, strlen(line), 0);
+    //     memset(line, 0, sizeof(line));
+    // }
     char end[] = "\r\n";
     send(sockfd, end, 2, 0);
-    fclose(f);
+    // fclose(f);
 }
 
 void *process(void* psockfd) {
@@ -152,7 +153,7 @@ int main() {
     pthread_t tid;
     struct sockaddr_in client;
     socklen_t clientlen = sizeof(client);
-    unsigned int port = 5000;
+    unsigned int port = 8888;
 
     serverfd = create_server_fd(port);
     LOG("Server started, listen port %d", port);
