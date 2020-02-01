@@ -89,7 +89,7 @@ void forward(char *packet, struct sockaddr_in dest_addr, char *response)
     int proxy_sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     LOG("start forwarding...");
     int proxy_ret = connect(proxy_sockfd, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
-    LOG("connected to destination! %s", packet);
+    LOG("connected to destination! %s %u", packet, (unsigned int)sizeof(packet));
     send(proxy_sockfd, packet, sizeof(packet), 0);
     LOG("request is sent. Waiting...");
 
