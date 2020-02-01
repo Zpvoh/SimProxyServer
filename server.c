@@ -90,7 +90,7 @@ void forward(char *packet, struct sockaddr_in dest_addr, char *response)
     LOG("start forwarding...");
     int proxy_ret = connect(proxy_sockfd, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
     LOG("connected to destination! %s %u", packet, (unsigned int)sizeof(packet));
-    send(proxy_sockfd, packet, sizeof(packet), 0);
+    send(proxy_sockfd, packet, MAX_REQUEST_LEN, 0);
     LOG("request is sent. Waiting...");
 
     char *buf = response;
