@@ -229,6 +229,9 @@ void *process(void *psockfd)
         return NULL;
     }
 
+    while(handle_request(sockfd)==KEEP_ALIVE);
+
+    close(sockfd);
     return NULL;
 }
 
