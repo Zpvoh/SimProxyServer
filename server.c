@@ -1,22 +1,4 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <pthread.h>
-#include <ctype.h>
-#include <netdb.h>
-
-#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#define LOG(fmt, ...) printf(fmt" %s:%d\n", ##__VA_ARGS__, __FILENAME__, __LINE__)
-#define EXIT(error) do {perror(error); exit(EXIT_FAILURE);} while(0)
-
-#define MAX_REQUEST_LEN 10240
-#define MAX_METHOD_LEN  32
-#define MAX_URI_LEN     256
+#include "server.h"
 
 int parse_request(int sockfd, char *method, char *uri) {
     char buff[MAX_REQUEST_LEN] = {0};
@@ -41,6 +23,58 @@ int parse_request(int sockfd, char *method, char *uri) {
     }
     uri[i] = '\0';
     return 0;
+}
+
+int handle_request(int sockfd){
+    char buff[MAX_REQUEST_LEN] = {0};
+    ssize_t len = recv(sockfd, buff, sizeof(buff), 0);
+    if (len <= 0) {
+        LOG("call recv error, ret %d", (int)len);
+        return -1;
+    }
+    
+    char *cur = buff;
+    printf("content: %s", buff);
+
+    char method[MAX_METHOD_LEN] = {0};
+    int i = 0;
+    while (i < MAX_METHOD_LEN && !isspace(*cur)) {
+        method[i++] = *cur++;
+    }
+    method[i] = '\0';
+
+    while(isspace(*cur)) cur++;
+    char uri[MAX_URI_LEN] = {0};
+    i = 0;
+    while (i < MAX_URI_LEN && !isspace(*cur)) {
+        uri[i++] = *cur++;
+    }
+    uri[i] = '\0';
+
+    struct sockaddr_in dest_addr = uri2ip(uri);
+    char response[2048] = {0};
+    forward(buff, dest_addr, response);
+    send(sockfd, response, 2048, 0);
+
+    return 0;
+}
+
+void forward(char *packet, struct sockaddr_in dest_addr, char *response){
+    int recv_num=0;
+    int proxy_sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    int proxy_ret = connect(proxy_sockfd, (struct sockaddr* )&dest_addr, sizeof(struct sockaddr));
+    send(proxy_sockfd, packet, sizeof(packet), 0);
+    
+    char *buf = response;
+    while(1){
+        recv_num = recv(proxy_sockfd, buf, 2048, 0);
+        buf += recv_num;
+        if(recv_num==0 || recv_num==-1){
+            break;
+        }
+    }
+
+    LOG("response: %s", response);
 }
 
 void unimplemented(int client) {
@@ -76,6 +110,45 @@ void url_decode(const char *src, char *dest) {
     }
     *dest = '\0';
 }
+
+struct sockaddr_in uri2ip(char *uri){
+    struct sockaddr_in result;
+    memset(&result, 0, sizeof(result));
+
+    char *hostname;
+    char *port;
+    char *buff;
+    buff = uri;
+    hostname = strsep(&buff, ":");
+    port = strsep(&buff, ":");
+    port = strsep(&port, "/");
+    printf("%s, %s\n", hostname, port);
+    int port_num = atoi(port);
+    result.sin_port = htons(port_num);
+
+    struct hostent *hptr = gethostbyname(hostname);
+    char **pptr;
+    char str[INET_ADDRSTRLEN];
+    switch (hptr->h_addrtype)
+    {
+    case AF_INET:
+        result.sin_family = AF_INET;
+        result.sin_addr.s_addr = inet_addr(inet_ntop(AF_INET, hptr->h_addr, str, sizeof(str)));
+        // pptr = hptr->h_addr_list;
+        // for (; *pptr != NULL; pptr++)
+        // {
+        //     printf("\taddress: %s\n",
+        //            inet_ntop(hptr->h_addrtype, *pptr, str, sizeof(str)));
+        // }
+        break;
+    default:
+        printf("unknown address type\n");
+        break;
+    }
+
+    return result;
+}
+
 
 void do_get(int sockfd, const char *uri) {
     char filename[MAX_URI_LEN] = {0};
@@ -124,6 +197,7 @@ void *process(void* psockfd) {
         goto FINAL;
     
     printf("uri is %s\n", uri);
+    handle_request(sockfd);
     // if (strcmp(method, "GET") == 0) {
     //     do_get(sockfd, uri);
     // } else {
