@@ -62,8 +62,11 @@ int handle_request(int sockfd){
 void forward(char *packet, struct sockaddr_in dest_addr, char *response){
     int recv_num=0;
     int proxy_sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    LOG("start forwarding...");
     int proxy_ret = connect(proxy_sockfd, (struct sockaddr* )&dest_addr, sizeof(struct sockaddr));
+    LOG("connected to destination!");
     send(proxy_sockfd, packet, sizeof(packet), 0);
+    LOG("request is sent. Waiting...");
     
     char *buf = response;
     while(1){
@@ -182,10 +185,6 @@ void do_get(int sockfd, const char *uri) {
     char end[] = "\r\n";
     send(sockfd, end, 2, 0);
     // fclose(f);
-}
-
-void do_process_packet(int sockfd, const char *uri){
-
 }
 
 void *process(void* psockfd) {
