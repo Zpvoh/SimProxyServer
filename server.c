@@ -34,8 +34,7 @@ int handle_request(int sockfd){
     }
     
     char *cur = buff;
-    //printf("content: %s", buff);
-    printf("start forwarding...\n");
+    printf("content: %s", buff);
 
     char method[MAX_METHOD_LEN] = {0};
     int i = 0;
@@ -193,11 +192,10 @@ void *process(void* psockfd) {
     char method[MAX_METHOD_LEN] = {0};
     char uri[MAX_URI_LEN] = {0};
     
-    if (parse_request(sockfd, method, uri) != 0)
+    if (handle_request(sockfd) != 0)
         goto FINAL;
     
     printf("uri is %s\n", uri);
-    handle_request(sockfd);
     // if (strcmp(method, "GET") == 0) {
     //     do_get(sockfd, uri);
     // } else {
