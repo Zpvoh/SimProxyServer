@@ -53,7 +53,7 @@ int handle_request(int sockfd){
 
     struct sockaddr_in dest_addr = uri2ip(uri);
     char response[2048] = {0};
-    LOG("prepare for forwarding...");
+    printf("start forwarding...\n");
     forward(buff, dest_addr, response);
     send(sockfd, response, 2048, 0);
 
