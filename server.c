@@ -26,33 +26,30 @@ int parse_request(int sockfd, char *method, char *uri, char *buff) {
 }
 
 int handle_request(int sockfd){
-    char request[MAX_REQUEST_LEN] = {0};
-    char method[MAX_METHOD_LEN] = {0};
-    char uri[MAX_URI_LEN] = {0};
-    int result = parse_request(sockfd, method, uri, request);
-    // ssize_t len = recv(sockfd, buff, sizeof(buff), 0);
-    // if (len <= 0) {
-    //     LOG("call recv error, ret %d", (int)len);
-    //     return -1;
-    // }
+    char buff[MAX_REQUEST_LEN] = {0};
+    ssize_t len = recv(sockfd, buff, sizeof(buff), 0);
+    if (len <= 0) {
+        LOG("call recv error, ret %d", (int)len);
+        return -1;
+    }
     
-    // char *cur = buff;
-    // printf("content: %s", buff);
+    char *cur = buff;
+    printf("content: %s", buff);
 
-    // char method[MAX_METHOD_LEN] = {0};
-    // int i = 0;
-    // while (i < MAX_METHOD_LEN && !isspace(*cur)) {
-    //     method[i++] = *cur++;
-    // }
-    // method[i] = '\0';
+    char method[MAX_METHOD_LEN] = {0};
+    int i = 0;
+    while (i < MAX_METHOD_LEN && !isspace(*cur)) {
+        method[i++] = *cur++;
+    }
+    method[i] = '\0';
 
-    // while(isspace(*cur)) cur++;
-    // char uri[MAX_URI_LEN] = {0};
-    // i = 0;
-    // while (i < MAX_URI_LEN && !isspace(*cur)) {
-    //     uri[i++] = *cur++;
-    // }
-    // uri[i] = '\0';
+    while(isspace(*cur)) cur++;
+    char uri[MAX_URI_LEN] = {0};
+    i = 0;
+    while (i < MAX_URI_LEN && !isspace(*cur)) {
+        uri[i++] = *cur++;
+    }
+    uri[i] = '\0';
 
     // struct sockaddr_in dest_addr = uri2ip(uri);
     // char response[2048] = {0};
