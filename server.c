@@ -76,7 +76,7 @@ int handle_request(int sockfd)
     {
         struct sockaddr_in dest_addr = uri2ip(uri);
         char response[MAX_REQUEST_LEN] = {0};
-        forward(buff, dest_addr, response);
+        forward(packet, dest_addr, response);
         send(sockfd, response, MAX_REQUEST_LEN, 0);
     }
 
