@@ -18,5 +18,8 @@
 #define MAX_METHOD_LEN  32
 #define MAX_URI_LEN     256
 
+#define KEEP_ALIVE 0
+#define CLOSE_CONNECTION 1
+
 struct sockaddr_in uri2ip(char*);
 void forward(char*, struct sockaddr_in, char*);

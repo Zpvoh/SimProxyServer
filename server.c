@@ -1,52 +1,63 @@
 #include "server.h"
 
-int parse_request(int sockfd, char *method, char *uri, char *buff) {
+int parse_request(int sockfd, char *method, char *uri, char *buff)
+{
     //char buff[MAX_REQUEST_LEN] = {0};
     ssize_t len = recv(sockfd, buff, sizeof(buff), 0);
-    if (len <= 0) {
+    if (len <= 0)
+    {
         LOG("call recv error, ret %d", (int)len);
         return -1;
     }
-    
+
     char *cur = buff;
     printf("content: %s\n", buff);
     int i = 0;
-    while (i < MAX_METHOD_LEN && !isspace(*cur)) {
+    while (i < MAX_METHOD_LEN && !isspace(*cur))
+    {
         method[i++] = *cur++;
     }
     method[i] = '\0';
 
-    while(isspace(*cur)) cur++;
+    while (isspace(*cur))
+        cur++;
     i = 0;
-    while (i < MAX_URI_LEN && !isspace(*cur)) {
+    while (i < MAX_URI_LEN && !isspace(*cur))
+    {
         uri[i++] = *cur++;
     }
     uri[i] = '\0';
     return 0;
 }
 
-int handle_request(int sockfd){
+int handle_request(int sockfd)
+{
+    int result = KEEP_ALIVE;
     char buff[MAX_REQUEST_LEN] = {0};
     ssize_t len = recv(sockfd, buff, sizeof(buff), 0);
-    if (len <= 0) {
+    if (len <= 0)
+    {
         LOG("call recv error, ret %d", (int)len);
         return -1;
     }
-    
+
     char *cur = buff;
     printf("content: %s", buff);
 
     char method[MAX_METHOD_LEN] = {0};
     int i = 0;
-    while (i < MAX_METHOD_LEN && !isspace(*cur)) {
+    while (i < MAX_METHOD_LEN && !isspace(*cur))
+    {
         method[i++] = *cur++;
     }
     method[i] = '\0';
 
-    while(isspace(*cur)) cur++;
+    while (isspace(*cur))
+        cur++;
     char uri[MAX_URI_LEN] = {0};
     i = 0;
-    while (i < MAX_URI_LEN && !isspace(*cur)) {
+    while (i < MAX_URI_LEN && !isspace(*cur))
+    {
         uri[i++] = *cur++;
     }
     uri[i] = '\0';
@@ -54,26 +65,39 @@ int handle_request(int sockfd){
     // struct sockaddr_in dest_addr = uri2ip(uri);
     // char response[2048] = {0};
     // forward(request, dest_addr, response);
-    send(sockfd, "HTTP/1.1 200 Connection Established", 2048, 0);
+    if (strcmp(method, "CONNECT") == 0)
+    {
+        send(sockfd, "HTTP/1.1 200 Connection Established", 2048, 0);
+    }
+    else
+    {
+        struct sockaddr_in dest_addr = uri2ip(uri);
+        char response[2048] = {0};
+        forward(buff, dest_addr, response);
+        send(sockfd, response, 2048, 0);
+    }
 
-    return 0;
+    return result;
 }
 
-void forward(char *packet, struct sockaddr_in dest_addr, char *response){
-    int recv_num=0;
+void forward(char *packet, struct sockaddr_in dest_addr, char *response)
+{
+    int recv_num = 0;
     int proxy_sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     LOG("start forwarding...");
-    int proxy_ret = connect(proxy_sockfd, (struct sockaddr* )&dest_addr, sizeof(struct sockaddr));
+    int proxy_ret = connect(proxy_sockfd, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
     LOG("connected to destination!");
     send(proxy_sockfd, packet, sizeof(packet), 0);
     LOG("request is sent. Waiting...");
-    
+
     char *buf = response;
-    while(1){
+    while (1)
+    {
         recv_num = recv(proxy_sockfd, buf, 2048, 0);
         LOG("recv num: %d", recv_num);
         buf += recv_num;
-        if(recv_num==0 || recv_num==-1){
+        if (recv_num == 0 || recv_num == -1)
+        {
             break;
         }
     }
@@ -81,7 +105,8 @@ void forward(char *packet, struct sockaddr_in dest_addr, char *response){
     LOG("response: %s", response);
 }
 
-void unimplemented(int client) {
+void unimplemented(int client)
+{
     char buff[] =
         "HTTP/1.0 501 Method Not Implemented\r\n"
         "Content-Type: text/html\r\n"
@@ -100,22 +125,28 @@ void not_found(int client)
     send(client, buff, strlen(buff), 0);
 }
 
-void url_decode(const char *src, char *dest) {
+void url_decode(const char *src, char *dest)
+{
     const char *p = src;
     char code[3] = {0};
-    while (*p && *p != '?') {
-        if(*p == '%') {
+    while (*p && *p != '?')
+    {
+        if (*p == '%')
+        {
             memcpy(code, ++p, 2);
             *dest++ = (char)strtoul(code, NULL, 16);
             p += 2;
-        } else {
+        }
+        else
+        {
             *dest++ = *p++;
         }
     }
     *dest = '\0';
 }
 
-struct sockaddr_in uri2ip(char *uri){
+struct sockaddr_in uri2ip(char *uri)
+{
     struct sockaddr_in result;
     memset(&result, 0, sizeof(result));
 
@@ -153,8 +184,8 @@ struct sockaddr_in uri2ip(char *uri){
     return result;
 }
 
-
-void do_get(int sockfd, const char *uri) {
+void do_get(int sockfd, const char *uri)
+{
     char filename[MAX_URI_LEN] = {0};
     const char *cur = uri + 1;
     size_t len = strlen(cur);
@@ -164,7 +195,7 @@ void do_get(int sockfd, const char *uri) {
     //     url_decode(cur, filename);
     // }
     // printf("%s\n", filename);
-    
+
     // FILE *f = fopen(filename, "r");
     // if (NULL == f) {
     //     not_found(sockfd);
@@ -176,7 +207,7 @@ void do_get(int sockfd, const char *uri) {
         "Content-Type: text/html\r\n"
         "\r\n";
     send(sockfd, header, sizeof(header), 0);
-    
+
     char line[128] = {0};
     send(sockfd, "hello world", 11, 0);
     // while (fgets(line, sizeof(line), f) != NULL) {
@@ -188,16 +219,21 @@ void do_get(int sockfd, const char *uri) {
     // fclose(f);
 }
 
-void *process(void* psockfd) {
-    int sockfd = *(int*)psockfd;
-    
-    if (handle_request(sockfd) != 0)
-        close(sockfd);;
+void *process(void *psockfd)
+{
+    int sockfd = *(int *)psockfd;
+
+    if (handle_request(sockfd) != KEEP_ALIVE)
+    {
+        close(sockfd);
+        return NULL;
+    }
 
     return NULL;
 }
 
-int create_server_fd (unsigned int port) {
+int create_server_fd(unsigned int port)
+{
     int serverfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (serverfd == -1)
         EXIT("create socket fail");
@@ -208,7 +244,7 @@ int create_server_fd (unsigned int port) {
     server.sin_port = htons(port);
     server.sin_addr.s_addr = INADDR_ANY;
 
-    if (bind(serverfd,(struct sockaddr *)&server, sizeof(server)) == -1)
+    if (bind(serverfd, (struct sockaddr *)&server, sizeof(server)) == -1)
         EXIT("bind fail");
 
     if (listen(serverfd, 10) == -1)
@@ -217,7 +253,8 @@ int create_server_fd (unsigned int port) {
     return serverfd;
 }
 
-int main() {
+int main()
+{
     int serverfd, connfd;
     pthread_t tid;
     struct sockaddr_in client;
@@ -226,13 +263,17 @@ int main() {
 
     serverfd = create_server_fd(port);
     LOG("Server started, listen port %d", port);
-    while (1) {
+    while (1)
+    {
         connfd = accept(serverfd, (struct sockaddr *)&client, &clientlen);
-        if (pthread_create(&tid, NULL, process, &connfd) == 0) {
-            unsigned char *ip = (unsigned char*)&client.sin_addr.s_addr;
+        if (pthread_create(&tid, NULL, process, &connfd) == 0)
+        {
+            unsigned char *ip = (unsigned char *)&client.sin_addr.s_addr;
             unsigned short port = client.sin_port;
             LOG("request %u.%u.%u.%u:%5u", ip[0], ip[1], ip[2], ip[3], port);
-        } else {
+        }
+        else
+        {
             EXIT("create thread fail");
         }
     }
