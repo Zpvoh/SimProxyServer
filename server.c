@@ -150,13 +150,30 @@ struct sockaddr_in uri2ip(char *uri)
     struct sockaddr_in result;
     memset(&result, 0, sizeof(result));
 
+    char *protocol;
     char *hostname;
     char *port;
     char *buff;
     buff = uri;
-    hostname = strsep(&buff, ":");
+    char *tmp = strsep(&buff, "://");
+    if (strcmp(tmp, "http") == 0 || strcmp(tmp, "https") == 0)
+    {
+        protocol = tmp;
+        buff+=2;
+        hostname = strsep(&buff, ":");
+    }
+    else
+    {
+        protocol = NULL;
+        //buff = uri;
+        hostname = tmp;
+    }
     port = strsep(&buff, ":");
     port = strsep(&port, "/");
+
+    hostname = port==NULL?strsep(&hostname, "/"):hostname;
+    port = port==NULL?"80":port;
+    
     printf("%s, %s\n", hostname, port);
     int port_num = atoi(port);
     result.sin_port = htons(port_num);
@@ -169,12 +186,6 @@ struct sockaddr_in uri2ip(char *uri)
     case AF_INET:
         result.sin_family = AF_INET;
         result.sin_addr.s_addr = inet_addr(inet_ntop(AF_INET, hptr->h_addr, str, sizeof(str)));
-        // pptr = hptr->h_addr_list;
-        // for (; *pptr != NULL; pptr++)
-        // {
-        //     printf("\taddress: %s\n",
-        //            inet_ntop(hptr->h_addrtype, *pptr, str, sizeof(str)));
-        // }
         break;
     default:
         printf("unknown address type\n");
