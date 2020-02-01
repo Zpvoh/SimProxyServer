@@ -35,6 +35,7 @@ int handle_request(int sockfd){
     
     char *cur = buff;
     printf("content: %s", buff);
+    printf("start forwarding...\n");
 
     char method[MAX_METHOD_LEN] = {0};
     int i = 0;
@@ -53,7 +54,6 @@ int handle_request(int sockfd){
 
     struct sockaddr_in dest_addr = uri2ip(uri);
     char response[2048] = {0};
-    printf("start forwarding...\n");
     forward(buff, dest_addr, response);
     send(sockfd, response, 2048, 0);
 
