@@ -42,7 +42,8 @@ int handle_request(int sockfd)
     }
 
     char *cur = buff;
-    printf("content: %s", buff);
+    char packet[MAX_REQUEST_LEN];
+    strcpy(packet, buff);
 
     char method[MAX_METHOD_LEN] = {0};
     int i = 0;
@@ -61,6 +62,8 @@ int handle_request(int sockfd)
         uri[i++] = *cur++;
     }
     uri[i] = '\0';
+
+    printf("content: %s", packet);
 
     // struct sockaddr_in dest_addr = uri2ip(uri);
     // char response[2048] = {0};
