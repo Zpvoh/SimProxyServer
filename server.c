@@ -1,7 +1,7 @@
 #include "server.h"
 
-int parse_request(int sockfd, char *method, char *uri) {
-    char buff[MAX_REQUEST_LEN] = {0};
+int parse_request(int sockfd, char *method, char *uri, char *buff) {
+    //char buff[MAX_REQUEST_LEN] = {0};
     ssize_t len = recv(sockfd, buff, sizeof(buff), 0);
     if (len <= 0) {
         LOG("call recv error, ret %d", (int)len);
@@ -26,35 +26,38 @@ int parse_request(int sockfd, char *method, char *uri) {
 }
 
 int handle_request(int sockfd){
-    char buff[MAX_REQUEST_LEN] = {0};
-    ssize_t len = recv(sockfd, buff, sizeof(buff), 0);
-    if (len <= 0) {
-        LOG("call recv error, ret %d", (int)len);
-        return -1;
-    }
-    
-    char *cur = buff;
-    printf("content: %s", buff);
-
+    char request[MAX_REQUEST_LEN] = {0};
     char method[MAX_METHOD_LEN] = {0};
-    int i = 0;
-    while (i < MAX_METHOD_LEN && !isspace(*cur)) {
-        method[i++] = *cur++;
-    }
-    method[i] = '\0';
-
-    while(isspace(*cur)) cur++;
     char uri[MAX_URI_LEN] = {0};
-    i = 0;
-    while (i < MAX_URI_LEN && !isspace(*cur)) {
-        uri[i++] = *cur++;
-    }
-    uri[i] = '\0';
+    int result = parse_request(sockfd, method, uri, request);
+    // ssize_t len = recv(sockfd, buff, sizeof(buff), 0);
+    // if (len <= 0) {
+    //     LOG("call recv error, ret %d", (int)len);
+    //     return -1;
+    // }
+    
+    // char *cur = buff;
+    // printf("content: %s", buff);
 
-    struct sockaddr_in dest_addr = uri2ip(uri);
-    char response[2048] = {0};
-    forward(buff, dest_addr, response);
-    send(sockfd, response, 2048, 0);
+    // char method[MAX_METHOD_LEN] = {0};
+    // int i = 0;
+    // while (i < MAX_METHOD_LEN && !isspace(*cur)) {
+    //     method[i++] = *cur++;
+    // }
+    // method[i] = '\0';
+
+    // while(isspace(*cur)) cur++;
+    // char uri[MAX_URI_LEN] = {0};
+    // i = 0;
+    // while (i < MAX_URI_LEN && !isspace(*cur)) {
+    //     uri[i++] = *cur++;
+    // }
+    // uri[i] = '\0';
+
+    // struct sockaddr_in dest_addr = uri2ip(uri);
+    // char response[2048] = {0};
+    // forward(request, dest_addr, response);
+    send(sockfd, "HTTP/1.1 200 Connection Established", 2048, 0);
 
     return 0;
 }
@@ -190,15 +193,10 @@ void do_get(int sockfd, const char *uri) {
 
 void *process(void* psockfd) {
     int sockfd = *(int*)psockfd;
-    char method[MAX_METHOD_LEN] = {0};
-    char uri[MAX_URI_LEN] = {0};
     
     if (handle_request(sockfd) != 0)
-        goto FINAL;
+        close(sockfd);;
 
-
-FINAL:
-    close(sockfd);
     return NULL;
 }
 
