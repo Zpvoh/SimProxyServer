@@ -97,7 +97,6 @@ void do_get(int sockfd, const char *uri) {
         "Content-Type: text/html\r\n"
         "\r\n";
     send(sockfd, header, sizeof(header), 0);
-    printf("uri is %s\n", uri);
     
     char line[128] = {0};
     send(sockfd, "hello world", 11, 0);
@@ -122,6 +121,7 @@ void *process(void* psockfd) {
     if (parse_request(sockfd, method, uri) != 0)
         goto FINAL;
     
+    printf("uri is %s\n", uri);
     if (strcmp(method, "GET") == 0) {
         do_get(sockfd, uri);
     } else {
