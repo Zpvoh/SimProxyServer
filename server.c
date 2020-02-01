@@ -8,6 +8,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <ctype.h>
+#include <netdb.h>
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define LOG(fmt, ...) printf(fmt" %s:%d\n", ##__VA_ARGS__, __FILENAME__, __LINE__)
@@ -26,6 +27,7 @@ int parse_request(int sockfd, char *method, char *uri) {
     }
     
     char *cur = buff;
+    printf("content: %s", buff);
     int i = 0;
     while (i < MAX_METHOD_LEN && !isspace(*cur)) {
         method[i++] = *cur++;
@@ -122,11 +124,12 @@ void *process(void* psockfd) {
         goto FINAL;
     
     printf("uri is %s\n", uri);
-    if (strcmp(method, "GET") == 0) {
-        do_get(sockfd, uri);
-    } else {
-        unimplemented(sockfd);
-    }
+    // if (strcmp(method, "GET") == 0) {
+    //     do_get(sockfd, uri);
+    // } else {
+    //     unimplemented(sockfd);
+    // }
+
 
 FINAL:
     close(sockfd);
