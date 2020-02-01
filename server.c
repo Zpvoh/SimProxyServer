@@ -34,7 +34,7 @@ int handle_request(int sockfd){
     }
     
     char *cur = buff;
-    printf("content: %s", buff);
+    //printf("content: %s", buff);
     printf("start forwarding...\n");
 
     char method[MAX_METHOD_LEN] = {0};
