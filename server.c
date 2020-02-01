@@ -9,7 +9,7 @@ int parse_request(int sockfd, char *method, char *uri, char *buff) {
     }
     
     char *cur = buff;
-    printf("content: %s", buff);
+    printf("content: %s\n", buff);
     int i = 0;
     while (i < MAX_METHOD_LEN && !isspace(*cur)) {
         method[i++] = *cur++;
