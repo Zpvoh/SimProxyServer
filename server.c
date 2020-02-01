@@ -195,13 +195,6 @@ void *process(void* psockfd) {
     
     if (handle_request(sockfd) != 0)
         goto FINAL;
-    
-    printf("uri is %s\n", uri);
-    // if (strcmp(method, "GET") == 0) {
-    //     do_get(sockfd, uri);
-    // } else {
-    //     unimplemented(sockfd);
-    // }
 
 
 FINAL:
