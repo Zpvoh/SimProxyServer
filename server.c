@@ -71,6 +71,7 @@ void forward(char *packet, struct sockaddr_in dest_addr, char *response){
     char *buf = response;
     while(1){
         recv_num = recv(proxy_sockfd, buf, 2048, 0);
+        LOG("recv num: %d", recv_num);
         buf += recv_num;
         if(recv_num==0 || recv_num==-1){
             break;
